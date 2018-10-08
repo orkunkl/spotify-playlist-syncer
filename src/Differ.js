@@ -13,11 +13,6 @@ var youtubeSearchOpts = {
   key: process.env.YoutubeApiKey
 };
 
-var lambda = new aws.Lambda()
-var lambdaOpts = {
-  FunctionName: 'download'
-}
-
 module.exports.main = async (event, context) => {
   var statusCode;
   var message;
