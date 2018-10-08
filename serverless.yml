@@ -1,0 +1,38 @@
+service: set-syncer # NOTE: update this with your service name
+
+app: set-syncer-dev
+tenant: modahqi
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  region: eu-central-1
+  environment:
+    SpotifyClientId: ${file(./config.json):SPOTIFY_CLIENT_ID}
+    SpotifyClientSecret: ${file(./config.json):SPOTIFY_CLIENT_SECRET}
+    YoutubeApiKey: ${file(./config.json):YOUTUBE_API_KEY}
+
+plugins:
+  - serverless-plugin-include-dependencies
+  - serverless-offline
+
+functions:
+  checker:
+    handler: src/Differ.main
+    events:
+      - http:
+          path: ''
+          method: get
+
+
+  downloader:
+    handler: src/Downloader.main
+    events:
+      - http:
+          path: '/download/{id}'
+          method: get
+          private: true
+          request: 
+          parameters: 
+            paths: 
+              id: true
