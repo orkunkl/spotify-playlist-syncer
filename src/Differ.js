@@ -1,11 +1,16 @@
 'use strict';
 
+const S3            = require('aws-sdk/clients/s3');
 const SpotifyWebApi = require('spotify-web-api-node');
-const search = require('youtube-search');
-const vandium = require('vandium');
+const search        = require('youtube-search');
+const vandium       = require('vandium');
 
+const s3Client = new S3()
+const bucketParams = {
+  Bucket: "examplebucket"
+ };
 const spotifyApi = new SpotifyWebApi({
-  clientId: process.env.SpotifyClientId,
+  clientId:     process.env.SpotifyClientId,
   clientSecret: process.env.SpotifyClientSecret
 });
 

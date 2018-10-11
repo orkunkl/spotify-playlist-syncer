@@ -5,6 +5,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "aws-sdk": "^2.332.0",
     "spotify-web-api-node": "^4.0.0",
     "vandium": "^4.8.0",
     "youtube-dl": "^1.12.2",
