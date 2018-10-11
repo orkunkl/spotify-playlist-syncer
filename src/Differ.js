@@ -1,50 +1,40 @@
 'use strict';
 
-var SpotifyWebApi = require('spotify-web-api-node');
-var search = require('youtube-search');
+const SpotifyWebApi = require('spotify-web-api-node');
+const search = require('youtube-search');
+const vandium = require('vandium');
 
-var spotifyApi = new SpotifyWebApi({
+const spotifyApi = new SpotifyWebApi({
   clientId: process.env.SpotifyClientId,
   clientSecret: process.env.SpotifyClientSecret
 });
 
-var youtubeSearchOpts = {
+const youtubeSearchOpts = {
   maxResults: 1,
   key: process.env.YoutubeApiKey
 };
 
-module.exports.main = async (event, context) => {
-  var statusCode;
-  var message;
+function searchYoutube(trackName) {
+    return new Promise(function(resolve, reject) {
+        search(trackName, youtubeSearchOpts, function(err, results) {
+          if(err) reject(err)
+          else    resolve(results)
+        }) 
+    })
+}
 
-  spotifyApi.clientCredentialsGrant().then(
-    function(data) {
-      spotifyApi.setAccessToken(data.body['access_token']);
-      spotifyApi.getPlaylist('0eNoY50Me7mOZ3DsHLYYLa')
-        .then(function(data) {
-        	var tracks = data.body.tracks.items;
-          tracks.forEach(track => 
-            search(track.name, youtubeSearchOpts, function(err, results) {
-              if(err) return console.log(err);
-
-            }));          
-        })
-        .catch(function(err) {
-          console.error('Something went wrong!', err);
-        });
-    },
-  ).catch(function(err) {
-      console.error('Something went wrong when retrieving an access token', err);
-    });
-  var diff = [1,4,6].diff([1, 2, 3]);
-  return {
-    statusCode: statusCode,
-    body: JSON.stringify({
-      message: diff
-    }),
-  };
-
-};
+module.exports.main = vandium.api() 
+                      .GET((event) => {
+                        spotifyApi.clientCredentialsGrant()
+                          .then((data) => spotifyApi.setAccessToken(data.body['access_token']))
+                          .then((a) => spotifyApi.getPlaylist('0eNoY50Me7mOZ3DsHLYYLa'))
+                          .then((playlist) => {
+                            return Promise.all(playlist.body.tracks.items.map(function (item) {
+                              return searchYoutube(item.track.name)
+                            }))
+                          })
+                          .catch((err) => console.log(err))
+                      })
 
 Array.prototype.diff = function(a) {
     return this.filter(function(i) {return a.indexOf(i) < 0;});

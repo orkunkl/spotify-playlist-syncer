@@ -24,15 +24,5 @@ functions:
           path: ''
           method: get
 
-
   downloader:
     handler: src/Downloader.main
-    events:
-      - http:
-          path: '/download/{id}'
-          method: get
-          private: true
-          request: 
-          parameters: 
-            paths: 
-              id: true

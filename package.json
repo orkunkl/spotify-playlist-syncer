@@ -1,12 +1,12 @@
-
+{
   "name": "set-syncer",
   "version": "1.0.0",
   "description": "This example demonstrates how to use environment variables for AWS Lambdas.",
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "ramda": "^0.25.0",
     "spotify-web-api-node": "^4.0.0",
+    "vandium": "^4.8.0",
     "youtube-dl": "^1.12.2",
     "youtube-search": "^1.1.3"
   },
