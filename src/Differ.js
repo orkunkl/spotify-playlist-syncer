@@ -1,46 +1,36 @@
 'use strict';
 
-const S3            = require('aws-sdk/clients/s3');
-const SpotifyWebApi = require('spotify-web-api-node');
-const search        = require('youtube-search');
-const vandium       = require('vandium');
+const aws           = require('aws-sdk');
+const SpotifyWebApi = require('spotify-web-api-node')
+const search        = require('youtube-search')
+const vandium       = require('vandium')
 
-const s3Client = new S3()
-const bucketParams = {
-  Bucket: "examplebucket"
- };
+const s3Client = new aws.S3()
+const lambda   = new aws.Lambda()
+
+const Song = require('./models/Song.js');
+const conf = require('./conf.js');
+
 const spotifyApi = new SpotifyWebApi({
-  clientId:     process.env.SpotifyClientId,
-  clientSecret: process.env.SpotifyClientSecret
-});
-
-const youtubeSearchOpts = {
-  maxResults: 1,
-  key: process.env.YoutubeApiKey
-};
-
-function searchYoutube(trackName) {
-    return new Promise(function(resolve, reject) {
-        search(trackName, youtubeSearchOpts, function(err, results) {
-          if(err) reject(err)
-          else    resolve(results)
-        }) 
-    })
-}
+  clientId:     conf.config.spotifyCreds.clientId,
+  clientSecret: conf.config.spotifyCreds.clientSecret
+})
 
 module.exports.main = vandium.api() 
                       .GET((event) => {
                         spotifyApi.clientCredentialsGrant()
                           .then((data) => spotifyApi.setAccessToken(data.body['access_token']))
-                          .then((a) => spotifyApi.getPlaylist('0eNoY50Me7mOZ3DsHLYYLa'))
-                          .then((playlist) => {
-                            return Promise.all(playlist.body.tracks.items.map(function (item) {
-                              return searchYoutube(item.track.name)
-                            }))
-                          })
+                          .then((_)    => spotifyApi.getPlaylist(conf.config.playlistLink))
+                          .then(findSongsToDownload)
+                          .then((songsToDownload) => console.log(songsToDownload))
                           .catch((err) => console.log(err))
                       })
 
-Array.prototype.diff = function(a) {
-    return this.filter(function(i) {return a.indexOf(i) < 0;});
-};
+function findSongsToDownload(playlist) {
+  return s3Client.listObjects(conf.config.bucketParams).promise().then((ss) => {
+    const playlistSongs = playlist.body.tracks.items.map((item) => new Song(item.track.id, item.track.artist,item.track.name))
+    return playlistSongs.filter((song) => {
+      return !ss.Contents.includes(song.id);
+    })
+  })
+}                      

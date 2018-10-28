@@ -7,18 +7,26 @@ provider:
   name: aws
   runtime: nodejs8.10
   region: eu-central-1
-  profile: moda-hqi
+  profile: default
   environment:
-    SpotifyClientId: ${file(./config.json):SPOTIFY_CLIENT_ID}
+    SpotifyClientId:     ${file(./config.json):SPOTIFY_CLIENT_ID}
     SpotifyClientSecret: ${file(./config.json):SPOTIFY_CLIENT_SECRET}
-    YoutubeApiKey: ${file(./config.json):YOUTUBE_API_KEY}
+    YoutubeApiKey:       ${file(./config.json):YOUTUBE_API_KEY}
+  iamRoleStatements: # permissions for all of your functions can be set here
+    - Effect: Allow
+      Action: # Gives permission to DynamoDB tables in a specific region
+        - s3:PutObject
+        - s3:ListBucket
+      Resource: "arn:aws:s3:::first-set"
+  resources:
+    - ${file(resources/s3.yml)}  
 
 plugins:
   - serverless-plugin-include-dependencies
   - serverless-offline
 
 functions:
-  checker:
+  differ:
     handler: src/Differ.main
     events:
       - http:
