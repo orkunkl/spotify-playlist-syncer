@@ -6,6 +6,11 @@ class Song {
         this.artist = artist;
         this.name   = name;
     }
+
+}
+
+Song.fromJson = obj => {
+    return new Song (obj.id, obj.artist, obj.name)
 }
 
 module.exports = Song

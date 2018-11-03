@@ -7,31 +7,50 @@ provider:
   name: aws
   runtime: nodejs8.10
   region: eu-central-1
-  profile: default
+  profile: moda.hqi
   environment:
     SpotifyClientId:     ${file(./config.json):SPOTIFY_CLIENT_ID}
     SpotifyClientSecret: ${file(./config.json):SPOTIFY_CLIENT_SECRET}
     YoutubeApiKey:       ${file(./config.json):YOUTUBE_API_KEY}
-  iamRoleStatements: # permissions for all of your functions can be set here
+    AWSAccountID:        ${file(./config.json):AWS_ACCOUNT_ID}
+  iamRoleStatements:
     - Effect: Allow
-      Action: # Gives permission to DynamoDB tables in a specific region
+      Action:
         - s3:PutObject
         - s3:ListBucket
       Resource: "arn:aws:s3:::first-set"
-  resources:
-    - ${file(resources/s3.yml)}  
+    - Effect: "Allow"
+      Resource: "*"
+      Action:
+        - "sns:*"
 
 plugins:
   - serverless-plugin-include-dependencies
   - serverless-offline
+  - serverless-offline-sns
+ # - serverless-webpack
+  
+
+package:
+  include:
+    - binaries/*
 
 functions:
   differ:
-    handler: src/Differ.main
+    handler: src/handlers/Differ.diff
     events:
       - http:
           path: ''
           method: get
-
   downloader:
-    handler: src/Downloader.main
+    handler: src/handlers/Downloader.download
+    events:
+      - sns: test-topic
+
+custom:
+  serverless-offline-sns:
+    port: 4002 # a free port for the sns server to run on
+    debug: false
+    # host: 0.0.0.0 # Optional, defaults to 127.0.0.1 if not provided to serverless-offline
+    # sns-endpoint: http://127.0.0.1:4567 # Optional. Only if you want to use a custom endpoint
+    # accountId: 123456789012 # Optional
